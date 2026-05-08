@@ -1,141 +1,176 @@
-# Pebble + Claw Harness
+# Pebble
 
-Pebble + Claw Harness is a local-first MVP for deterministic software failure recovery.
+**Pebble remembers which CI failures happened, which recoveries worked, and uses that history to choose the safest fix on the next run.**
 
-Claw runs real commands. Pebble remembers failures, fingerprints them, records which recoveries worked, and then uses that history to choose the safest recovery on future runs.
+It is a local-first failure memory engine for Rust projects. No cloud. No account. No dashboard yet.
 
-## What Is Real Today
+---
 
-- Runs real commands in a real repo.
-- Captures stdout, stderr, exit code, timeout status, and duration.
-- Classifies common Rust, Git, formatting, test, timeout, and infrastructure failures.
-- Fingerprints recurring failures such as `rust_format_check_failed`.
-- Runs allowlisted recovery actions such as `cargo fmt`, `cargo fix`, `cargo clean`, wait-and-retry, and guarded Git sync.
-- Stores local memory in `.pebble/events.jsonl`.
-- Uses Pebble trail history only after enough evidence exists.
-- Writes a human-readable `task_report.txt`.
+## The Problem
 
-## Deterministic Policy
+CI fails. You fix it. It fails the same way three weeks later. You fix it again. Nothing learns anything.
 
-Pebble will only choose a recovery from history when both are true:
+Pebble fixes that. It fingerprints failures, records which recovery commands succeeded, and on future runs uses that evidence to act — or escalates to you if it doesn't have enough to act safely.
 
-- The failure fingerprint has at least `3` prior samples.
-- The recovery has at least `70%` prior success.
+---
 
-Otherwise Claw uses a deterministic default policy or escalates to human review.
+## What It Does Today
 
-This is intentionally conservative. The product should earn autonomy with evidence, not vibes.
+- Runs your command (`cargo test`, `cargo fmt --check`, `cargo build`, etc.)
+- Classifies the failure: format error, compile error, stale branch, network flake, test panic
+- Runs an allowlisted recovery: `cargo fmt`, `cargo fix`, `cargo clean`, wait-and-retry, or guarded `git pull --rebase`
+- Records the outcome in `.pebble/events.jsonl` inside your repo
+- On future runs, consults that history before deciding what to do
+
+**Pebble will only act from history when:**
+- The failure fingerprint has at least **3 prior samples**
+- The recovery has at least **70% prior success**
+
+Otherwise it uses a deterministic default or escalates to you. It earns autonomy with evidence, not assumptions.
+
+---
 
 ## Quick Start
 
-Run the harness against the current repo:
+```bash
+# Install (from source for now)
+git clone https://github.com/your-username/pebble
+cd pebble
+cargo install --path .
 
-```powershell
-cargo run -- . cargo test
+# Run against any Rust project
+pebble /path/to/your-project cargo fmt --check
+
+# Preview what Pebble would do — no side effects, no writes
+pebble --dry-run /path/to/your-project cargo fmt --check
+
+# View accumulated recovery history
+pebble stats /path/to/your-project
 ```
 
-Preview a recovery plan without running recovery actions or writing Pebble memory:
+---
 
-```powershell
-cargo run -- --dry-run . cargo fmt --check
+## Example Run
+
+```
+Attempt 1
+Running: cargo fmt --check
+Exit code:   1
+Signal:      FormatFailure
+Fingerprint: rust_format_check_failed
+
+Recovery: running cargo fmt before retry.
+Decision source: default-policy
+Recovery result: OK - cargo fmt completed successfully
+
+Attempt 2
+Running: cargo fmt --check
+Exit code:   0
+Signal:      TaskCompleted
+
+Verdict: real command completed successfully.
 ```
 
-Run the stats view:
+After three successful recoveries, Pebble uses trail memory:
 
-```powershell
-cargo run -- stats .
 ```
+Decision source: pebble-trail
+Pebble trail selected CargoFmtAndRetry: 3/3 prior successes for this fingerprint
+```
+
+---
 
 ## Dry-Run Mode
 
-Dry-run mode is observe-and-plan mode.
+Dry-run runs the command once so Pebble can classify real output. It does not run recovery commands, write memory, or write reports. It exits 1 if the observed command failed.
 
-It does run the target command once so Pebble can classify real output. It does not run recovery commands, write `.pebble/events.jsonl`, or write `task_report.txt`.
+Use it to safely test new classifier rules or preview what Pebble would do in a new repo.
 
-Dry-run still exits with the observed command result. If the observed command fails, dry-run exits `1`.
-
-Use it when adding or testing classifier rules:
-
-```powershell
-cargo run -- --dry-run C:\Users\Shakoor\pebble-demo cargo fmt --check
+```bash
+pebble --dry-run . cargo fmt --check
 ```
 
-Expected output on a formatting failure:
+---
 
-```text
-Signal:      FormatFailure
-Fingerprint: rust_format_check_failed
-DRY RUN: would execute recovery action CargoFmtAndRetry
-```
+## Classifiers
 
-## Classifier Modules
+Failure detection lives in `src/classifiers.rs` behind a `SignalClassifier` trait.
 
-Classifier rules live behind a registry in `src/classifiers.rs`.
+| Classifier | What it detects |
+|---|---|
+| `CargoFmtCheckClassifier` | `cargo fmt --check` formatting failures |
+| `GitStateClassifier` | Stale branch, merge conflict, rebase in progress |
+| `InfraClassifier` | Network errors, HTTP 502/503/504, DNS failures |
+| `RustToolchainClassifier` | Missing std/core/alloc — toolchain misconfiguration |
+| `RustCompileClassifier` | rustc errors, type mismatches, borrow checker failures |
+| `RustTestClassifier` | Test panics, assertion failures, retryable test timeouts |
 
-Current classifiers:
+Adding support for a new tool means adding one new struct that implements `SignalClassifier`. The executor core does not change.
 
-- `CargoFmtCheckClassifier`
-- `GitStateClassifier`
-- `InfraClassifier`
-- `RustToolchainClassifier`
-- `RustCompileClassifier`
-- `RustTestClassifier`
+---
 
-New tools should be added as new classifiers rather than expanding the executor core.
+## Recovery Actions
 
-## Full Demo
+| Action | When used |
+|---|---|
+| `CargoFmtAndRetry` | Formatting failure; runs `cargo check` first to avoid wasting a retry on broken code |
+| `CargoFixAndRetry` | Auto-fixable compile error (`unused import`, `machine-applicable` lint) |
+| `CargoCleanAndRetry` | Alternating failure oscillation detected |
+| `GitSyncAndRetry` | Stale branch; only runs when working tree is clean |
+| `WaitAndRetry` | Network flake, transient infra failure |
 
-Run the included demo script:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts\run-demo.ps1
-```
-
-The script creates a temporary Rust demo project under `.demo`, introduces formatting failures, runs Claw, and shows Pebble learning the recovery trail.
-
-Expected milestone:
-
-```text
-Decision source: pebble-trail
-Pebble trail selected CargoFmtAndRetry: 3/3 prior successes
-```
-
-## Manual Demo
-
-Create or open a Rust project with a badly formatted `src/main.rs`:
-
-```rust
-fn main(){println!("hello");}
-```
-
-Run:
-
-```powershell
-cargo run -- C:\Users\Shakoor\pebble-demo cargo fmt --check
-```
-
-Claw should detect `FormatFailure`, run `cargo fmt`, rerun `cargo fmt --check`, and pass.
-
-Then inspect memory:
-
-```powershell
-cargo run -- stats C:\Users\Shakoor\pebble-demo
-```
+---
 
 ## Safety Rules
 
-- Commands are run directly, not through a shell.
-- Unknown failures escalate.
-- Retry and same-failure limits are enforced.
-- Git rebase only runs when the working tree is clean.
-- Logs are redacted for common secret patterns before storage.
-- The harness never claims recovery unless the command passes after recovery.
-- `.pebble/` is added to the target repo `.gitignore` before memory events are written.
+- Commands run directly, never through a shell
+- Unknown failures always escalate to human review
+- Git rebase only runs on a clean working tree
+- Same failure class capped at 3 retries before escalation
+- Oscillation detection prevents infinite alternating failure loops
+- Logs redacted for tokens, passwords, and API keys before storage
+- `.pebble/` is added to `.gitignore` before any memory is written
+- Pebble never claims success unless the command exits 0 after recovery
 
-## Product Positioning
+---
 
-Sell this first as:
+## Memory Format
 
-> Pebble for CI Failure Memory: a deterministic system that shows which failures repeat, which recoveries work, and which recoveries are safe to automate.
+Pebble stores recovery history in `.pebble/events.jsonl` inside each repo it runs against. Each line is a JSON object:
 
-Do not sell it yet as a full autonomous coding platform. The next commercial step is CI integration, especially GitHub Actions, plus a small dashboard.
+```json
+{
+  "version": "4.2.0",
+  "timestamp_ms": 1746643200000,
+  "fingerprint": "rust_format_check_failed",
+  "failure_class": "Format",
+  "signal": "FormatFailure",
+  "recovery_action": "CargoFmtAndRetry",
+  "outcome_success": true,
+  "recovery_command_success": true,
+  "duration_ms": 412
+}
+```
+
+Memory is local to each repo. Nothing leaves your machine.
+
+---
+
+## What's Next
+
+- [ ] GitHub Actions integration — run Pebble as a CI step
+- [ ] Language-agnostic classifiers (Go, Python, Node)
+- [ ] Web dashboard for trail history across repos
+- [ ] `pebble init` to scaffold config per repo
+
+---
+
+## Contributing
+
+Classifiers are the easiest entry point. Each one is a small struct with a single `classify` method. If you have a failure pattern that Pebble misses, open an issue with the raw output and expected signal.
+
+---
+
+## License
+
+MIT
