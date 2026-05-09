@@ -2,7 +2,7 @@
 
 Deterministic failure memory and recovery engine for CI workflows.
 
-![CI](https://github.com/shakoorshkh/pebble/actions/workflows/ci.yml/badge.svg)
+![Pebble CI](https://github.com/shakoorshkh/pebble/actions/workflows/ci.yml/badge.svg?branch=main)
 
 ![Pebble Demo](media/demo.gif)
 
