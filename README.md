@@ -1,20 +1,22 @@
-# Pebble
+# pebble-ci
 
 Deterministic failure memory and recovery engine for CI workflows.
 
-![Pebble CI](https://github.com/shakoorshkh/pebble/actions/workflows/ci.yml/badge.svg?branch=main)
+![pebble-ci CI](https://github.com/shakoorshkh/pebble/actions/workflows/ci.yml/badge.svg?branch=main)
 
-![Pebble Demo](media/demo.gif)
+![pebble-ci Demo](media/demo.gif)
 
-**Pebble remembers which CI failures happened, which recoveries worked, and uses that history to choose the safest fix on the next run.**
+**pebble-ci remembers which CI failures happened, which recoveries worked, and uses that history to choose the safest fix on the next run.**
 
 It is a local-first failure memory engine for Rust projects with deterministic recovery and replayable operational history.
 
-## Why Pebble Exists
+---
+
+## Why pebble-ci Exists
 
 Most CI tooling reruns the same failures forever without learning from them.
 
-Pebble treats repeated operational failure as memory, not noise.
+pebble-ci treats repeated operational failure as memory, not noise.
 
 ---
 
@@ -22,7 +24,7 @@ Pebble treats repeated operational failure as memory, not noise.
 
 CI fails. You fix it. It fails the same way three weeks later. You fix it again. Nothing learns anything.
 
-Pebble fixes that. It fingerprints failures, records which recovery commands succeeded, and on future runs uses that evidence to act — or escalates to you if it doesn't have enough to act safely.
+pebble-ci fixes that. It fingerprints failures, records which recovery commands succeeded, and on future runs uses that evidence to act — or escalates to you if it doesn't have enough to act safely.
 
 ---
 
@@ -34,7 +36,7 @@ Pebble fixes that. It fingerprints failures, records which recovery commands suc
 - Records the outcome in `.pebble/events.jsonl` inside your repo
 - On future runs, consults that history before deciding what to do
 
-**Pebble will only act from history when:**
+**pebble-ci will only act from history when:**
 - The failure fingerprint has at least **3 prior samples**
 - The recovery has at least **70% prior success**
 
@@ -44,33 +46,32 @@ Otherwise it uses a deterministic default or escalates to you. It earns autonomy
 
 ## Quick Start
 
-## Install
+### Install
 
 ```bash
 cargo install pebble-ci
 ```
 
-## Run
+### Run
 
 ```bash
 # Run against any Rust project
-pebble /path/to/your-project cargo fmt --check
+pebble-ci /path/to/your-project cargo fmt --check
 
-# Preview what Pebble would do — no side effects, no writes
-pebble --dry-run /path/to/your-project cargo fmt --check
+# Preview what pebble-ci would do — no side effects, no writes
+pebble-ci --dry-run /path/to/your-project cargo fmt --check
 
 # View accumulated recovery history
-pebble stats /path/to/your-project
+pebble-ci stats /path/to/your-project
 ```
 
-## From Source
+### From Source
 
 ```bash
 git clone https://github.com/shakoorshkh/pebble
 cd pebble
 cargo install --path .
 ```
-
 
 ---
 
@@ -95,16 +96,18 @@ Signal:      TaskCompleted
 Verdict: real command completed successfully.
 ```
 
-After three successful recoveries, Pebble uses trail memory:
+After three successful recoveries, pebble-ci uses trail memory:
 
 ```
 Decision source: pebble-trail
 Pebble trail selected CargoFmtAndRetry: 3/3 prior successes for this fingerprint
 ```
 
+---
+
 ## Validation
 
-Pebble ships with an end-to-end pressure suite covering:
+pebble-ci ships with an end-to-end pressure suite covering:
 
 - formatting recovery
 - compile escalation
@@ -116,7 +119,7 @@ Pebble ships with an end-to-end pressure suite covering:
 
 Current status:
 
-```text
+```
 49/49 pressure tests passing
 ```
 
@@ -124,12 +127,12 @@ Current status:
 
 ## Dry-Run Mode
 
-Dry-run runs the command once so Pebble can classify real output. It does not run recovery commands, write memory, or write reports. It exits 1 if the observed command failed.
+Dry-run runs the command once so pebble-ci can classify real output. It does not run recovery commands, write memory, or write reports. It exits 1 if the observed command failed.
 
-Use it to safely test new classifier rules or preview what Pebble would do in a new repo.
+Use it to safely test new classifier rules or preview what pebble-ci would do in a new repo.
 
 ```bash
-pebble --dry-run . cargo fmt --check
+pebble-ci --dry-run . cargo fmt --check
 ```
 
 ---
@@ -172,13 +175,13 @@ Adding support for a new tool means adding one new struct that implements `Signa
 - Oscillation detection prevents infinite alternating failure loops
 - Logs redacted for tokens, passwords, and API keys before storage
 - `.pebble/` is added to `.gitignore` before any memory is written
-- Pebble never claims success unless the command exits 0 after recovery
+- pebble-ci never claims success unless the command exits 0 after recovery
 
 ---
 
 ## Memory Format
 
-Pebble stores recovery history in `.pebble/events.jsonl` inside each repo it runs against. Each line is a JSON object:
+pebble-ci stores recovery history in `.pebble/events.jsonl` inside each repo it runs against. Each line is a JSON object:
 
 ```json
 {
@@ -196,9 +199,11 @@ Pebble stores recovery history in `.pebble/events.jsonl` inside each repo it run
 
 Memory is local to each repo. Nothing leaves your machine.
 
+---
+
 ## Local-First Design
 
-Pebble stores all recovery memory locally inside each repository.
+pebble-ci stores all recovery memory locally inside each repository.
 
 There is:
 - no telemetry
@@ -215,13 +220,13 @@ Your failure history stays inside your repo.
 - [x] Continuous integration pipeline with GitHub Actions
 - [ ] Language-agnostic classifiers (Go, Python, Node)
 - [ ] Web dashboard for trail history across repos
-- [ ] `pebble init` to scaffold config per repo
+- [ ] `pebble-ci init` to scaffold config per repo
 
 ---
 
 ## Contributing
 
-Classifiers are the easiest entry point. Each one is a small struct with a single `classify` method. If you have a failure pattern that Pebble misses, open an issue with the raw output and expected signal.
+Classifiers are the easiest entry point. Each one is a small struct with a single `classify` method. If you have a failure pattern that pebble-ci misses, open an issue with the raw output and expected signal.
 
 ---
 
