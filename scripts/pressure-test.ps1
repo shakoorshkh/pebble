@@ -145,16 +145,16 @@ Banner "1. Binary name + branding"
 
 $buildOut = (cargo build --manifest-path "$PEBBLE_ROOT\Cargo.toml" 2>&1 | Out-String)
 
-$binaryPath = "$PEBBLE_ROOT\target\debug\pebble.exe"
+$binaryPath = "$PEBBLE_ROOT\target\debug\pebble-ci.exe"
 
-Assert-FileExists "Binary is pebble.exe" $binaryPath
+Assert-FileExists "Binary is pebble-ci.exe" $binaryPath
 Assert-FileNotExists "Old claw-harness.exe removed" "$PEBBLE_ROOT\target\debug\claw-harness.exe"
 
 $versionOut = (& "$binaryPath" 2>&1 | Out-String)
 
 Assert-Contains "Header says Pebble" $versionOut "Pebble v4.2.0"
 Assert-NotContains "No Claw references remain" $versionOut "Claw"
-Assert-Contains "Usage shows pebble.exe" $versionOut "pebble.exe"
+Assert-Contains "Usage shows pebble-ci.exe" $versionOut "pebble-ci.exe"
 
 # ============================================================
 Banner "2. Format failure → recovery → success"
