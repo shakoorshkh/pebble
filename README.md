@@ -45,7 +45,15 @@ Otherwise it uses a deterministic default or escalates to you. It earns autonomy
 git clone https://github.com/shakoorshkh/pebble
 cd pebble
 cargo install --path .
+```
 
+> crates.io publishing planned next. Installation will become:
+>
+> ```bash
+> cargo install pebble
+> ```
+
+```bash
 # Run against any Rust project
 pebble /path/to/your-project cargo fmt --check
 
