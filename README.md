@@ -75,6 +75,30 @@ cargo install --path .
 
 ---
 
+
+## GitHub Actions
+
+```yaml
+name: Pebble CI
+
+on: [push, pull_request]
+
+jobs:
+  pebble:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shakoorshkh/pebble@v4.2.0
+        with:
+          repo-path: .
+          command: cargo test
+```
+
+---
+
+
 ## Example Run
 
 ```
@@ -212,6 +236,18 @@ There is:
 - no centralized training
 
 Your failure history stays inside your repo.
+
+---
+
+## Non-Goals
+
+pebble-ci is not:
+- a cloud CI platform
+- an autonomous coding agent
+- an AI code generator
+- a hidden background daemon
+
+pebble-ci is a deterministic local recovery engine that learns from prior recovery outcomes.
 
 ---
 
