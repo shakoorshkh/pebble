@@ -1,0 +1,24 @@
+name: "Pebble CI"
+description: "Deterministic CI recovery engine with local failure memory"
+
+inputs:
+  repo-path:
+    description: "Repository path"
+    required: false
+    default: "."
+
+  command:
+    description: "Command to run"
+    required: true
+
+runs:
+  using: "composite"
+
+  steps:
+    - name: Install Pebble
+      shell: bash
+      run: cargo install pebble-ci
+
+    - name: Run Pebble
+      shell: bash
+      run: pebble-ci ${{ inputs.repo-path }} ${{ inputs.command }}
