@@ -34,7 +34,7 @@ function Set-BadFormat {
     Set-Content -Path $MainPath -Value "fn main(){println!(""$Message"");}" -Encoding ASCII
 }
 
-Write-Host "Pebble + Claw Harness demo"
+Write-Host "Pebble demo"
 Write-Host "Harness: $HarnessRoot"
 Write-Host "Demo repo: $DemoRepo"
 
