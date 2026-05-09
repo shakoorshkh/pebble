@@ -11,7 +11,7 @@ use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 mod classifiers;
 mod util;
 
-const PRODUCT_NAME: &str = "Pebble + Claw Harness";
+const PRODUCT_NAME: &str = "Pebble";
 const PRODUCT_VERSION: &str = "4.2.0";
 
 const MAX_TOTAL_RETRIES: u32 = 3;
@@ -27,7 +27,7 @@ fn main() {
     let mut raw_args = env::args();
     let program_name = raw_args
         .next()
-        .unwrap_or_else(|| "claw-harness".to_string());
+        .unwrap_or_else(|| "pebble".to_string());
     let mut args: Vec<String> = raw_args.collect();
 
     if args.is_empty() {
@@ -152,7 +152,7 @@ fn print_usage(program_name: &str) {
     println!("  cargo run -- stats .");
     println!();
     println!("What this does:");
-    println!("  Claw runs real commands and safe recoveries.");
+    println!("  Pebble runs real commands and safe recoveries.");
     println!("  Pebble records failures, fingerprints, recoveries, and outcomes.");
     println!("  Future runs use local Pebble trails to choose the safest recovery.");
     println!("  Dry-run observes one command run, plans recovery, and writes nothing.");

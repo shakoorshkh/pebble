@@ -3,5 +3,5 @@
 version = 4
 
 [[package]]
-name = "claw-harness"
+name = "pebble"
 version = "0.1.0"
