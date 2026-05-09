@@ -9,6 +9,7 @@ Deterministic failure memory and recovery engine for CI workflows.
 **Pebble remembers which CI failures happened, which recoveries worked, and uses that history to choose the safest fix on the next run.**
 
 It is a local-first failure memory engine for Rust projects with deterministic recovery and replayable operational history.
+
 ## Why Pebble Exists
 
 Most CI tooling reruns the same failures forever without learning from them.
@@ -43,18 +44,13 @@ Otherwise it uses a deterministic default or escalates to you. It earns autonomy
 
 ## Quick Start
 
+## Install
+
 ```bash
-# Install (from source for now)
-git clone https://github.com/shakoorshkh/pebble
-cd pebble
-cargo install --path .
+cargo install pebble-ci
 ```
 
-> crates.io publishing planned next. Installation will become:
->
-> ```bash
-> cargo install pebble
-> ```
+## Run
 
 ```bash
 # Run against any Rust project
@@ -66,6 +62,15 @@ pebble --dry-run /path/to/your-project cargo fmt --check
 # View accumulated recovery history
 pebble stats /path/to/your-project
 ```
+
+## From Source
+
+```bash
+git clone https://github.com/shakoorshkh/pebble
+cd pebble
+cargo install --path .
+```
+
 
 ---
 
