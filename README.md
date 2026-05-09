@@ -1,11 +1,14 @@
 # Pebble
 
+Deterministic failure memory and recovery engine for CI workflows.
+
 ![CI](https://github.com/shakoorshkh/pebble/actions/workflows/ci.yml/badge.svg)
+
+![Pebble Demo](media/demo.gif)
 
 **Pebble remembers which CI failures happened, which recoveries worked, and uses that history to choose the safest fix on the next run.**
 
-It is a local-first failure memory engine for Rust projects. No cloud. No account. No dashboard yet.
-
+It is a local-first failure memory engine for Rust projects with deterministic recovery and replayable operational history.
 ## Why Pebble Exists
 
 Most CI tooling reruns the same failures forever without learning from them.
