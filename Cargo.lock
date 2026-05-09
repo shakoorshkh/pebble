@@ -4,4 +4,4 @@ version = 4
 
 [[package]]
 name = "pebble"
-version = "0.1.0"
+version = "4.2.0"
