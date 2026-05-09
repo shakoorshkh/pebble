@@ -1,5 +1,5 @@
 [package]
-name = "pebble"
+name = "pebble-ci"
 version = "4.2.0"
 edition = "2021"
 description = "Deterministic failure memory and recovery engine for CI workflows"
