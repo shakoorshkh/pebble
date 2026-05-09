@@ -1,8 +1,16 @@
 # Pebble
 
+![CI](https://github.com/shakoorshkh/pebble/actions/workflows/ci.yml/badge.svg)
+
 **Pebble remembers which CI failures happened, which recoveries worked, and uses that history to choose the safest fix on the next run.**
 
 It is a local-first failure memory engine for Rust projects. No cloud. No account. No dashboard yet.
+
+## Why Pebble Exists
+
+Most CI tooling reruns the same failures forever without learning from them.
+
+Pebble treats repeated operational failure as memory, not noise.
 
 ---
 
@@ -34,7 +42,7 @@ Otherwise it uses a deterministic default or escalates to you. It earns autonomy
 
 ```bash
 # Install (from source for now)
-git clone https://github.com/your-username/pebble
+git clone https://github.com/shakoorshkh/pebble
 cd pebble
 cargo install --path .
 
@@ -76,6 +84,24 @@ After three successful recoveries, Pebble uses trail memory:
 ```
 Decision source: pebble-trail
 Pebble trail selected CargoFmtAndRetry: 3/3 prior successes for this fingerprint
+```
+
+## Validation
+
+Pebble ships with an end-to-end pressure suite covering:
+
+- formatting recovery
+- compile escalation
+- dry-run safety
+- trail learning
+- branding consistency
+- .gitignore idempotency
+- deterministic retry behavior
+
+Current status:
+
+```text
+49/49 pressure tests passing
 ```
 
 ---
@@ -154,11 +180,23 @@ Pebble stores recovery history in `.pebble/events.jsonl` inside each repo it run
 
 Memory is local to each repo. Nothing leaves your machine.
 
+## Local-First Design
+
+Pebble stores all recovery memory locally inside each repository.
+
+There is:
+- no telemetry
+- no cloud dependency
+- no remote execution
+- no centralized training
+
+Your failure history stays inside your repo.
+
 ---
 
 ## What's Next
 
-- [ ] GitHub Actions integration — run Pebble as a CI step
+- [x] Continuous integration pipeline with GitHub Actions
 - [ ] Language-agnostic classifiers (Go, Python, Node)
 - [ ] Web dashboard for trail history across repos
 - [ ] `pebble init` to scaffold config per repo
