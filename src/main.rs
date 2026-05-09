@@ -284,13 +284,13 @@ where
     let nonce = now_millis();
 
     let stdout_path = env::temp_dir().join(format!(
-        "pebble-claw-stdout-{}-{}.log",
+        "pebble-stdout-{}-{}.log",
         std::process::id(),
         nonce
     ));
 
     let stderr_path = env::temp_dir().join(format!(
-        "pebble-claw-stderr-{}-{}.log",
+        "pebble-stderr-{}-{}.log",
         std::process::id(),
         nonce
     ));
